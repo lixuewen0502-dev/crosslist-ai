@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI跨境Listing生成器 · 一键生成亚马逊爆款文案</title>
+  <meta name="description" content="AI-powered Amazon Listing Generator. Generate SEO-optimized titles, bullet points, and product descriptions in seconds.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ====== NAVBAR ====== -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <div class="logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">CrossList AI</span>
+      </div>
+      <div class="nav-links">
+        <a href="#generator">生成器</a>
+        <a href="#pricing">价格</a>
+        <a href="#faq">常见问题</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ====== HERO ====== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">🔥 跨境卖家必备工具</div>
+      <h1 class="hero-title">
+        <span class="gradient-text">AI跨境Listing</span>
+        <br>一键生成器
+      </h1>
+      <p class="hero-subtitle">
+        输入产品信息，30秒生成SEO优化亚马逊标题、五点描述、产品描述和关键词。<br>
+        支持中英日德四语，助你提高转化率30%+
+      </p>
+      <div class="hero-cta">
+        <a href="#generator" class="btn btn-primary">免费试用 →</a>
+        <a href="#pricing" class="btn btn-outline">查看价格</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">4</span>
+          <span class="stat-label">语言支持</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">30+</span>
+          <span class="stat-label">品类模板</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">100%</span>
+          <span class="stat-label">SEO优化</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== GENERATOR ====== -->
+  <section id="generator" class="generator-section">
+    <div class="container">
+      <h2 class="section-title">生成你的爆款Listing</h2>
+      <p class="section-desc">填写产品信息，AI自动生成完整亚马逊商品页文案</p>
+
+      <div class="generator-grid">
+        <!-- LEFT: Form -->
+        <div class="form-card">
+          <div class="form-header">
+            <h3>📝 产品信息</h3>
+            <span class="usage-badge" id="usageBadge">剩余使用：<strong>1</strong> 次</span>
+          </div>
+
+          <form id="listingForm">
+            <div class="form-group">
+              <label for="productName">产品名称 *</label>
+              <input type="text" id="productName" placeholder="例如：无线蓝牙耳机、便携手机支架" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="category">产品品类</label>
+                <select id="category">
+                  <option value="electronics">电子产品</option>
+                  <option value="home">家居用品</option>
+                  <option value="pet">宠物用品</option>
+                  <option value="beauty">美妆工具</option>
+                  <option value="outdoor">户外运动</option>
+                  <option value="kitchen">厨房用品</option>
+                  <option value="phone">手机配件</option>
+                  <option value="fashion">时尚配饰</option>
+                  <option value="toy">玩具</option>
+                  <option value="auto">汽车用品</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="market">目标市场</label>
+                <select id="market">
+                  <option value="US">🇺🇸 美国 (English)</option>
+                  <option value="UK">🇬🇧 英国 (English)</option>
+                  <option value="JP">🇯🇵 日本 (日本語)</option>
+                  <option value="DE">🇩🇪 德国 (Deutsch)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="keywords">核心关键词（用逗号分隔）*</label>
+              <input type="text" id="keywords" placeholder="例如：无线耳机,降噪,运动防水,蓝牙5.3" required>
+            </div>
+
+            <div class="form-group">
+              <label for="features">产品卖点（可选，每行一个）</label>
+              <textarea id="features" rows="3" placeholder="长续航30小时&#10;IPX7防水&#10;舒适入耳设计"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="price">售价区间（可选，用于定价策略）</label>
+              <div class="price-inputs">
+                <input type="number" id="priceMin" placeholder="最低 $" min="0" step="0.01">
+                <span class="price-sep">—</span>
+                <input type="number" id="priceMax" placeholder="最高 $" min="0" step="0.01">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" id="generateBtn">
+              ✨ AI生成Listing
+            </button>
+          </form>
+
+          <div class="form-footer-note">
+            <span>🔒 1次免费试用 · 之后需付款解锁</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: Output -->
+        <div class="output-card" id="outputCard">
+          <div class="output-header">
+            <h3>📄 生成的Listing</h3>
+            <div class="output-actions">
+              <button class="btn-sm" id="copyAllBtn" disabled title="复制全部">📋 复制</button>
+              <button class="btn-sm" id="exportBtn" disabled title="下载TXT">⬇ 导出</button>
+            </div>
+          </div>
+          <div class="output-body" id="outputBody">
+            <div class="output-placeholder">
+              <div class="placeholder-icon">✦</div>
+              <p>填写左侧表单，点击生成<br>你的AI Listing将显示在这里</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== PRICING ====== -->
+  <section id="pricing" class="pricing-section">
+    <div class="container">
+      <h2 class="section-title">简单透明的价格</h2>
+      <p class="section-desc">用加密货币支付，安全便捷</p>
+
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3>免费试用</h3>
+            <div class="price">$0</div>
+          </div>
+          <ul class="pricing-features">
+            <li>✅ 1次完整生成</li>
+            <li>✅ 所有品类支持</li>
+            <li>✅ 所有语言支持</li>
+            <li>✅ 标题+五点+描述</li>
+            <li>❌ 导出为文件</li>
+            <li>❌ 无限使用</li>
+          </ul>
+          <a href="#generator" class="btn btn-outline btn-full">开始试用</a>
+        </div>
+
+        <div class="pricing-card featured">
+          <div class="pricing-badge">🔥 推荐</div>
+          <div class="pricing-header">
+            <h3>无限版</h3>
+            <div class="price">$5</div>
+            <div class="price-note">一次性付费，永久使用</div>
+          </div>
+          <ul class="pricing-features">
+            <li>✅ 无限次生成</li>
+            <li>✅ 所有品类支持</li>
+            <li>✅ 所有语言支持</li>
+            <li>✅ 标题+五点+描述</li>
+            <li>✅ 导出为TXT文件</li>
+            <li>✅ 未来更新免费</li>
+          </ul>
+          <button class="btn btn-primary btn-full" id="buyBtn">💎 立即购买 · $5</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== PAYMENT MODAL ====== -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal-content">
+      <button class="modal-close" id="modalClose">&times;</button>
+      <div class="modal-body">
+        <div class="modal-icon">💎</div>
+        <h3>用加密货币支付</h3>
+        <p class="modal-desc">发送 <strong>$5 USDT (ERC-20)</strong> 或等值ETH到以下地址，获取无限使用权限</p>
+
+        <div class="wallet-address-box">
+          <div class="wallet-label">收款地址</div>
+          <div class="wallet-address" id="walletAddress">0xb4EbCFdc40e384E192a9E0eCC7cB50521DCc8f6A</div>
+          <button class="btn-sm" id="copyAddressBtn">📋 复制地址</button>
+        </div>
+
+        <div class="payment-steps">
+          <h4>付款步骤：</h4>
+          <ol>
+            <li>打开你的加密货币钱包（如 MetaMask、OKX Wallet）</li>
+            <li>发送 <strong>$5 USDT (ERC-20)</strong> 或等值ETH到上方地址</li>
+            <li>付款成功后，将<strong>交易哈希 (TxID)</strong> 通过页面下方方式发给我们</li>
+            <li>我们核对后，<strong>1小时内</strong>为你开通无限权限</li>
+          </ol>
+        </div>
+
+        <div class="payment-contact">
+          <p>📧 付款后请发送TxID到：<br>
+          <span class="contact-email">listing@crosslist-ai.com</span><br>
+          <small>（或联系我们的微信客服，信息见页面底部）</small></p>
+        </div>
+
+        <p class="modal-note">⚠️ 请确认发送至 <strong>ERC-20 (Ethereum)</strong> 网络，其他网络可能导致资产丢失</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== SUCCESS TOAST ====== -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ====== FAQ ====== -->
+  <section id="faq" class="faq-section">
+    <div class="container">
+      <h2 class="section-title">常见问题</h2>
+      <div class="faq-list">
+        <details class="faq-item" open>
+          <summary>生成的内容质量如何？</summary>
+          <p>我们的AI引擎基于大量亚马逊Best Seller数据分析训练，生成的内容符合Amazon A9算法偏好，标题包含核心关键词+长尾词，五点描述突出痛点和卖点。建议生成后根据实际产品微调。</p>
+        </details>
+        <details class="faq-item">
+          <summary>怎么付款？安全吗？</summary>
+          <p>我们接受USDT (ERC-20) 和 ETH 支付。加密货币交易不可逆、匿名、安全。付款后发送交易哈希 (TxID) 到我们的邮箱，我们会在1小时内为您开通无限权限。</p>
+        </details>
+        <details class="faq-item">
+          <summary>免费用户和付费用户有什么区别？</summary>
+          <p>免费用户可生成1次完整Listing。付费用户 ($5 一次性) 可无限次生成、无限制导出文件，并享受所有未来更新。</p>
+        </details>
+        <details class="faq-item">
+          <summary>支持哪些语言？</summary>
+          <p>目前支持：英语（美国/英国）、日语、德语。更多语言即将上线。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="logo-text">CrossList AI</span>
+          <p>AI-powered Amazon listing generator for cross-border sellers.</p>
+        </div>
+        <div class="footer-contact">
+          <p>📧 listing@crosslist-ai.com</p>
+          <p>💬 微信客服：crosslist-ai</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 CrossList AI. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

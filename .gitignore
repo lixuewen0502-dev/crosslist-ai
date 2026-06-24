@@ -1,0 +1,10 @@
+wallet-secret.json
+wallet-address.txt
+build_files.py
+write_scriptjs.py
+gen_js.py
+fix_scope.py
+generate_wallet.py
+__pycache__/
+*.pyc
+.git/
