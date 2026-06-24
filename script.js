@@ -119,7 +119,54 @@ function generateListing(data){
   const b=generateBullets(productName,category,market,keywords,features);
   const d=generateDescription(productName,category,market,keywords,features,b,storeDomain);
   const k=generateKeywords(productName,category,market,keywords);
-  return{title:t,bullets:b,description:d,backendKeywords:k}
+  const vars=generateTitleVariants(productName,category,market,keywords,features);
+  const score=scoreListing(t,productName,category);
+  return{title:t,bullets:b,description:d,backendKeywords:k,variants:vars,score:score}
+}
+
+// ====== TITLE VARIANTS (AB TESTING) ======
+function generateTitleVariants(name,category,market,keywords,features){
+  const d=getCategoryData(category,market);const k=keywords.split(",").map(x=>x.trim()).filter(Boolean);
+  const f=features.split("\n").map(x=>x.trim()).filter(Boolean);const adj=d.adjectives;
+  const styles=[
+    {t:"SEO\u538b\u6c34\u730e\u5957\u8def",map:{kw2:"Amazon",feat1:k[0]||adj[0],feat2:k[1]||adj[1],feat3:k[2]||adj[2]}},
+    {t:"\u60c5\u611f\u5356\u70b9\u5957\u8def",map:{kw2:"Best",feat1:"Amazing "+adj[0],feat2:k[0]||adj[1],feat3:"Perfect"}},
+    {t:"\u7cbe\u54c1\u5dee\u5f02\u5316\u5957\u8def",map:{kw2:"Premium",feat1:adj[0]+" Technology",feat2:adj[1]+" Design",feat3:"Latest"}}
+  ];
+  return styles.map(s=>{
+    return d.titleTemplates[0]
+      .replace(/{name}/g,name)
+      .replace(/{kw1}/g,k[0]||name)
+      .replace(/{kw2}/g,s.map.kw2)
+      .replace(/{kw3}/g,k[2]||"Quality")
+      .replace(/{feat1}/g,s.map.feat1)
+      .replace(/{feat2}/g,s.map.feat2)
+      .replace(/{feat3}/g,s.map.feat3)
+      .replace(/{use_case}/g,d.useCase);
+  }).map(t=>t.length>190?t.substring(0,187)+"...":t)
+}
+
+// ====== LISTING QUALITY SCORING ======
+function scoreListing(title,name,category){
+  const d=getCategoryData(category);let score=0;const notes=[];
+  const l=title.length;
+  if(l>=80&&l<=150){score+=25;notes.push("\u2705 \u6807\u9898\u957f\u5ea6\u4f18\u79c0(80-150\u5b57\u7b26)");}
+  else if(l>=60&&l<=190){score+=15;notes.push("\u2714\ufe0f \u6807\u9898\u957f\u5ea6\u5408\u7402");}
+  else{score+=5;notes.push("\u26a0\ufe0f \u6807\u9898\u957f\u5ea6\u5efa\u8bae\u8c03\u6574\u523080-150\u5b57\u7b26");}
+  const hasName=title.toLowerCase().includes(name.toLowerCase().split(" ")[0]);
+  if(hasName){score+=20;notes.push("\u2705 \u4ea7\u54c1\u540d\u79f0\u5df2\u5305\u542b\u5728\u6807\u9898\u4e2d");}
+  else{score+=5;notes.push("\u26a0\ufe0f \u5efa\u8bae\u5c06\u4ea7\u54c1\u540d\u653e\u5165\u6807\u9898");}
+  const adj=d.adjectives;
+  const adjCount=adj.filter(a=>title.toLowerCase().includes(a.toLowerCase())).length;
+  if(adjCount>=2){score+=20;notes.push("\u2705 \u5305\u542b\u591a\u4e2a\u5356\u70b9\u5f62\u5bb9\u8bcd");}
+  else{score+=10;notes.push("\u2714\ufe0f \u53ef\u8003\u8651\u589e\u52a0\u66f4\u591a\u5356\u70b9\u5f62\u5bb9\u8bcd");}
+  const hasNumbers=/\\d+/.test(title);
+  if(hasNumbers){score+=15;notes.push("\u2705 \u5305\u542b\u6570\u5b57\uff08\u63d0\u5347\u70b9\u51fb\u7387\uff09");}
+  else{notes.push("\u2714\ufe0f \u5efa\u8bae\u52a0\u5165\u6570\u5b57\uff08\u5982\u5bb9\u91cf\u3001\u5c3a\u5bf8\u3001\u5e74\u4efd\uff09");}
+  const kwCount=(title.match(/\\b\\w{3,}\\b/g)||[]).length;
+  if(kwCount>=8){score+=20;notes.push("\u2705 \u5bc6\u96c6\u5173\u952e\u8bcd\u5e03\u5c40\uff0cSEO\u4f18\u79c0");}
+  else if(kwCount>=5){score+=10;notes.push("\u2714\ufe0f \u5173\u952e\u8bcd\u5e03\u5c40\u5408\u7402");}
+  return{total:score,level:score>=80?"A":score>=60?"B":score>=40?"C":"D",notes:notes}
 }
 
 // ====== USAGE TRACKING ======
@@ -148,12 +195,19 @@ function showOutput(result){
   const mNames={US:"\uD83C\uDDFA\uD83C\uDDF8 \u7f8e\u56fd",UK:"\uD83C\uDDEC\uD83C\uDDE7 \u82f1\u56fd",JP:"\uD83C\uDDEF\uD83C\uDDF5 \u65e5\u672c",DE:"\uD83C\uDDE9\uD83C\uDDEA \u5fb7\u56fd"};
   const cNames={electronics:"\u7535\u5b50\u4ea7\u54c1",home:"\u5bb6\u5c45\u7528\u54c1",pet:"\u5ba0\u7269\u7528\u54c1",beauty:"\u7f8e\u5986\u5de5\u5177",outdoor:"\u6237\u5916\u8fd0\u52a8",kitchen:"\u53a8\u623f\u7528\u54c1",phone:"\u624b\u673a\u914d\u4ef6",fashion:"\u65f6\u5c1a\u914d\u9970",toy:"\u73a9\u5177",auto:"\u6c7d\u8f66\u7528\u54c1"};
   const m=document.getElementById("market");const c=document.getElementById("category");
-  ob.innerHTML='<div class="output-result"><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span style="font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(108,92,231,0.1);color:var(--accent-light)">'+(mNames[m?m.value:"US"]||"\uD83C\uDDFA\uD83C\uDDF8 \u7f8e\u56fd")+'</span><span style="font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(0,230,118,0.1);color:var(--success)">'+(cNames[c?c.value:"electronics"]||"\u901a\u7528")+'</span></div>'+
+  const levelColors={A:"var(--success)",B:"var(--accent-light)",C:"orange",D:"#ff6b6b"};
+  const levelLabels={A:"\u4f18\u79c0",B:"\u826f\u597d",C:"\u4e00\u822c",D:"\u5f85\u4f18\u5316"};
+  const s=result.score;
+  ob.innerHTML='<div class="output-result"><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span style="font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(108,92,231,0.1);color:var(--accent-light)">'+(mNames[m?m.value:"US"]||"\uD83C\uDDFA\uD83C\uDDF8 \u7f8e\u56fd")+'</span><span style="font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(0,230,118,0.1);color:var(--success)">'+(cNames[c?c.value:"electronics"]||"\u901a\u7528")+'</span><span style="font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(255,193,7,0.1);color:'+levelColors[s.level]+'">\u2b50 \u8d28\u91cf\u7b49\u7ea7: '+s.level+' ('+levelLabels[s.level]+')</span></div>'+
     '<div class="output-section"><div class="output-section-label">\uD83D\uDCCC \u6807\u9898 (Title)</div><div class="output-section-content">'+result.title+'</div></div>'+
+    '<div class="output-section"><div class="output-section-label">\uD83C\uDF1F AB\u6d4b\u8bd5\u6807\u9898\u53d8\u4f53</div>'+
+    result.variants.map((v,i)=>'<div class="output-section-content" style="margin-bottom:4px;font-size:13px;background:rgba(108,92,231,0.03)">\u5f62\u5f0f'+(i+1)+': '+v+'</div>').join("")+'</div>'+
     '<div class="output-section"><div class="output-section-label">\u2705 \u4e94\u70b9\u5356\u70b9 (Bullet Points)</div>'+
     result.bullets.map(b=>'<div class="output-section-content" style="margin-bottom:6px">\u2022 '+b+'</div>').join("")+'</div>'+
     '<div class="output-section"><div class="output-section-label">\uD83D\uDCDD \u4ea7\u54c1\u63cf\u8ff0 (Description)</div><div class="output-section-content" style="font-size:13px">'+result.description+'</div></div>'+
-    '<div class="output-section"><div class="output-section-label">\uD83D\uDD11 \u540e\u7aef\u5173\u952e\u8bcd (Search Terms)</div><div class="output-section-content" style="font-size:12px;color:var(--text-muted)">'+result.backendKeywords+'</div></div></div>';
+    '<div class="output-section"><div class="output-section-label">\uD83D\uDD11 \u540e\u7aef\u5173\u952e\u8bcd (Search Terms)</div><div class="output-section-content" style="font-size:12px;color:var(--text-muted)">'+result.backendKeywords+'</div></div>'+
+    '<div class="output-section"><div class="output-section-label">\uD83D\uDCCA \u4f18\u5316\u5efa\u8bae</div><div class="output-section-content" style="font-size:13px">'+
+    s.notes.map(n=>'<div style="padding:2px 0">'+n+'</div>').join("")+'</div></div></div>';
   document.getElementById("copyAllBtn").disabled=false;
   document.getElementById("exportBtn").disabled=false
 }
@@ -177,8 +231,7 @@ document.addEventListener("DOMContentLoaded",function(){
   const generateBtn=document.getElementById("generateBtn");const usageBadge=document.getElementById("usageBadge");
   const copyAllBtn=document.getElementById("copyAllBtn");const exportBtn=document.getElementById("exportBtn");
   const buyBtn=document.getElementById("buyBtn");const paymentModal=document.getElementById("paymentModal");
-  const modalClose=document.getElementById("modalClose");const copyAddressBtn=document.getElementById("copyAddressBtn");
-  const walletAddress=document.getElementById("walletAddress");const toast=document.getElementById("toast");
+  const modalClose=document.getElementById("modalClose");
 
   form.addEventListener("submit",function(e){
     e.preventDefault();
@@ -202,26 +255,32 @@ document.addEventListener("DOMContentLoaded",function(){
   });
 
   copyAllBtn.addEventListener("click",function(){
-    const title=document.querySelector(".output-section:nth-child(2) .output-section-content");
-    const bullets=document.querySelectorAll(".output-section:nth-child(3) .output-section-content");
-    const desc=document.querySelector(".output-section:nth-child(4) .output-section-content");
-    const kws=document.querySelector(".output-section:nth-child(5) .output-section-content");
-    if(!title)return
-    let text="TITLE:\\n"+title.textContent+"\\n\\nBULLET POINTS:\\n";
-    bullets.forEach(b=>{text+="\u2022 "+b.textContent+"\\n"});
-    text+="\\nDESCRIPTION:\\n"+desc.textContent+"\\n\\nBACKEND KEYWORDS:\\n"+kws.textContent;
+    const sections=outputBody.querySelectorAll(".output-section");
+    let text="";
+    sections.forEach(s=>{
+      const label=s.querySelector(".output-section-label");
+      const content=s.querySelectorAll(".output-section-content");
+      if(label&&content.length>0){
+        text+=label.textContent.trim()+"\\n";
+        content.forEach(c=>{text+=c.textContent.trim()+"\\n"});
+        text+="\\n"
+      }
+    });
     navigator.clipboard.writeText(text).then(()=>showToast("\u2705 \u5168\u90e8\u5185\u5bb9\u5df2\u590d\u5236\u5230\u526a\u8d34\u677f","success")).catch(()=>{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();showToast("\u2705 \u5df2\u590d\u5236","success")})
   });
 
   exportBtn.addEventListener("click",function(){
-    const title=document.querySelector(".output-section:nth-child(2) .output-section-content");
-    const bullets=document.querySelectorAll(".output-section:nth-child(3) .output-section-content");
-    const desc=document.querySelector(".output-section:nth-child(4) .output-section-content");
-    const kws=document.querySelector(".output-section:nth-child(5) .output-section-content");
-    if(!title)return
-    let text="Amazon Listing - "+document.getElementById("productName").value.trim()+"\\n"+"=".repeat(50)+"\\n\\nTITLE:\\n"+title.textContent+"\\n\\nBULLET POINTS:\\n";
-    bullets.forEach(b=>{text+="\u2022 "+b.textContent+"\\n"});
-    text+="\\nDESCRIPTION:\\n"+desc.textContent+"\\n\\nBACKEND KEYWORDS:\\n"+kws.textContent;
+    const sections=outputBody.querySelectorAll(".output-section");
+    let text="Amazon Listing - "+document.getElementById("productName").value.trim()+"\\n"+"=".repeat(50)+"\\n\\n";
+    sections.forEach(s=>{
+      const label=s.querySelector(".output-section-label");
+      const content=s.querySelectorAll(".output-section-content");
+      if(label&&content.length>0){
+        text+=label.textContent.trim()+"\\n";
+        content.forEach(c=>{text+=c.textContent.trim()+"\\n"});
+        text+="\\n"
+      }
+    });
     const blob=new Blob([text],{type:"text/plain"});const url=URL.createObjectURL(blob);
     const a=document.createElement("a");a.href=url;a.download="listing_"+document.getElementById("productName").value.trim().replace(/\\s+/g,"_")+".txt";a.click();URL.revokeObjectURL(url);
     showToast("\u2705 \u6587\u4ef6\u5df2\u4e0b\u8f7d","success")
@@ -230,7 +289,6 @@ document.addEventListener("DOMContentLoaded",function(){
   buyBtn.addEventListener("click",function(){paymentModal.classList.add("active")});
   modalClose.addEventListener("click",function(){paymentModal.classList.remove("active")});
   paymentModal.addEventListener("click",function(e){if(e.target===paymentModal)paymentModal.classList.remove("active")});
-  copyAddressBtn.addEventListener("click",function(){navigator.clipboard.writeText(WALLET_ADDRESS).then(()=>showToast("\u2705 \u94b1\u5305\u5730\u5740\u5df2\u590d\u5236","success"))});
   initUI()
 });
 
