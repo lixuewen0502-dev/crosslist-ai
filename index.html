@@ -183,15 +183,15 @@
         <div class="pricing-card">
           <div class="pricing-header">
             <h3>免费试用</h3>
-            <div class="price">$0</div>
+            <div class="price">¥0</div>
           </div>
           <ul class="pricing-features">
             <li>✅ 1次完整生成</li>
             <li>✅ 所有品类支持</li>
             <li>✅ 所有语言支持</li>
-            <li>✅ 标题+五点+描述</li>
-            <li>❌ 导出为文件</li>
+            <li>✅ 质量评分</li>
             <li>❌ 无限使用</li>
+            <li>❌ 优先新功能</li>
           </ul>
           <a href="#generator" class="btn btn-outline btn-full">开始试用</a>
         </div>
@@ -199,19 +199,36 @@
         <div class="pricing-card featured">
           <div class="pricing-badge">🔥 推荐</div>
           <div class="pricing-header">
-            <h3>无限版</h3>
-            <div class="price">¥29.9</div>
-            <div class="price-note">一次性付费，永久使用</div>
+            <h3>月卡</h3>
+            <div class="price">¥19.9</div>
+            <div class="price-note">/月 · 不限量使用</div>
           </div>
           <ul class="pricing-features">
             <li>✅ 无限次生成</li>
             <li>✅ 所有品类支持</li>
             <li>✅ 所有语言支持</li>
-            <li>✅ 标题+五点+描述</li>
+            <li>✅ AB测试标题</li>
             <li>✅ 导出为TXT文件</li>
-            <li>✅ 未来更新免费</li>
+            <li>✅ 30天有效期</li>
           </ul>
-          <button class="btn btn-primary btn-full" id="buyBtn">💎 立即购买 · ¥29.9</button>
+          <button class="btn btn-primary btn-full" onclick="showPayment('month')">💎 开通月卡 · ¥19.9</button>
+        </div>
+
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3>年卡</h3>
+            <div class="price">¥99.9</div>
+            <div class="price-note">/年 · 日均不到3毛</div>
+          </div>
+          <ul class="pricing-features">
+            <li>✅ 无限次生成</li>
+            <li>✅ 所有品类+语言</li>
+            <li>✅ AB测试+质量评分</li>
+            <li>✅ 导出文件</li>
+            <li>✅ 365天有效期</li>
+            <li>💎 比月卡省¥139</li>
+          </ul>
+          <button class="btn btn-outline btn-full" onclick="showPayment('year')">💎 开通年卡 · ¥99.9</button>
         </div>
       </div>
     </div>
@@ -222,13 +239,13 @@
     <div class="modal-content">
       <button class="modal-close" id="modalClose">&times;</button>
       <div class="modal-body">
-        <div class="modal-icon">💎</div>
-        <h3>微信扫码支付 ¥29.9</h3>
-        <p class="modal-desc">一次性付费，永久解锁无限使用权限</p>
+        <div class="modal-icon" id="modalIcon">💎</div>
+        <h3 id="modalTitle">微信扫码支付</h3>
+        <p class="modal-desc" id="modalDesc">选择套餐后扫码支付，自动开通</p>
 
         <div class="wallet-address-box" style="text-align:center;padding:10px">
           <img src="qrcode-wechat.jpg" alt="微信收款码" style="width:240px;height:240px;border-radius:8px;display:block;margin:0 auto">
-          <p style="margin-top:12px;font-size:14px;color:var(--text-muted)">打开微信扫一扫，支付 <strong>¥29.9</strong></p>
+          <p style="margin-top:12px;font-size:14px;color:var(--text-muted)" id="modalAmount">打开微信扫一扫，支付 <strong>¥29.9</strong></p>
         </div>
 
         <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:16px">
@@ -260,7 +277,7 @@
         </details>
         <details class="faq-item">
           <summary>怎么付款？安全吗？</summary>
-          <p>微信扫码支付 <strong>¥29.9</strong>，一次性付费永久使用。付款后截图联系我开通即可，方便快捷又安全。</p>
+          <p>微信扫码支付。月卡 <strong>¥19.9/月</strong>，年卡 <strong>¥99.9/年</strong>（日均不到¥0.3）。付款后上传截图自动开通，方便快捷又安全。</p>
         </details>
         <details class="faq-item">
           <summary>免费用户和付费用户有什么区别？</summary>

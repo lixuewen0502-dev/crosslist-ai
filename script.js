@@ -169,12 +169,53 @@ function scoreListing(title,name,category){
   return{total:score,level:score>=80?"A":score>=60?"B":score>=40?"C":"D",notes:notes}
 }
 
-// ====== USAGE TRACKING ======
-const USAGE_KEY="crosslist_usage";const UNLOCKED_KEY="crosslist_unlocked";
-function getUsageCount(){return parseInt(localStorage.getItem(USAGE_KEY)||"0")}
-function incrementUsage(){const c=getUsageCount()+1;localStorage.setItem(USAGE_KEY,c.toString());return c}
-function isUnlocked(){return localStorage.getItem(UNLOCKED_KEY)==="true"}
-function unlockAccess(){localStorage.setItem(UNLOCKED_KEY,"true")}
+// ====== SUBSCRIPTION PLANS ======
+const PLANS={
+  month:{name:"\u6708\u5361",price:"\u00a519.9",days:30,color:"var(--accent-light)"},
+  year:{name:"\u5e74\u5361",price:"\u00a599.9",days:365,color:"var(--success)"}
+};
+const EXPIRY_KEY="crosslist_expiry";
+
+function getExpiry(){return parseInt(localStorage.getItem(EXPIRY_KEY)||"0")}
+function setExpiry(days){localStorage.setItem(EXPIRY_KEY,(Date.now()+days*86400000).toString())}
+function isUnlocked(){
+  const exp=getExpiry();
+  return exp>Date.now()
+}
+function getDaysLeft(){
+  const exp=getExpiry();
+  if(!exp)return 0;
+  return Math.max(0,Math.ceil((exp-Date.now())/86400000))
+}
+
+// Show payment modal for a plan
+function showPayment(plan){
+  const p=PLANS[plan];
+  if(!p)return;
+  document.getElementById("modalTitle").textContent="\u5fae\u4fe1\u626b\u7801\u652f\u4ed8 "+p.price;
+  document.getElementById("modalDesc").textContent="\u4e00\u6b21\u6027\u4ed8\u8d39\uff0c\u5f00\u901a"+p.name+"\uff0c"+p.days+"\u5929\u65e0\u9650\u4f7f\u7528";
+  document.getElementById("modalAmount").innerHTML='\u6253\u5f00\u5fae\u4fe1\u626b\u4e00\u626b\uff0c\u652f\u4ed8 <strong>'+p.price+'</strong>';
+  document.getElementById("modalIcon").style.color=p.color;
+  document.getElementById("paymentModal").classList.add("active");
+  // Save which plan was selected
+  window._selectedPlan=plan
+}
+
+function autoUnlock(){
+  const plan=window._selectedPlan||"month";
+  const p=PLANS[plan];
+  setExpiry(p.days);
+  document.getElementById("uploadStatus").innerHTML='<div style="text-align:center;color:var(--success);font-size:16px;font-weight:600">\u2705 \u9a8c\u8bc1\u901a\u8fc7\uff01'+p.name+"\u5df2\u5f00\u901a \ud83c\udf89<br><small style=\"color:var(--text-muted)\">\u5269\u4f59"+p.days+"\u5929\uff0c\u8fd4\u56de\u751f\u6210\u5668\u5373\u53ef\u65e0\u9650\u4f7f\u7528</small></div>";
+  setTimeout(function(){document.getElementById("paymentModal").classList.remove("active");updateUsageUI()},2500)
+}
+
+function manualUnlock(){
+  const plan=window._selectedPlan||"month";
+  const p=PLANS[plan];
+  setExpiry(p.days);
+  document.getElementById("uploadStatus").innerHTML='<div style="text-align:center;color:var(--success);font-weight:600">\ud83c\udf89 '+p.name+"\u5df2\u5f00\u901a\uff01\u611f\u8c22\u60a8\u7684\u652f\u6301</div>";
+  setTimeout(function(){document.getElementById("paymentModal").classList.remove("active");updateUsageUI()},1500)
+}
 
 // ====== GLOBAL UI FUNCTIONS (accessible from initUI) ======
 let toastTimer=null;
@@ -186,8 +227,12 @@ function showToast(msg,type){
 
 function updateUsageUI(){
   const b=document.getElementById("usageBadge");if(!b)return;
-  if(isUnlocked()){b.innerHTML='\uD83D\uDC8E \u65e0\u9650\u4f7f\u7528';b.style.borderColor='var(--success)';b.style.color='var(--success)';return}
-  const r=Math.max(0,1-getUsageCount());b.innerHTML='\u5269\u4f59\u4f7f\u7528\uff1a<strong>'+r+'</strong> \u6b21'
+  if(isUnlocked()){
+    const days=getDaysLeft();
+    if(days>30){b.innerHTML='\uD83D\uDC8E \u5e74\u5361 \u5269'+Math.floor(days/30)+'\u6708';b.style.borderColor='var(--success)';b.style.color='var(--success)';return}
+    b.innerHTML='\uD83D\uDC8E \u5df2\u5f00\u901a \u5269'+days+'\u5929';b.style.borderColor='var(--accent)';b.style.color='var(--accent-light)';return
+  }
+  b.innerHTML='\u2753 \u672a\u5f00\u901a';b.style.borderColor='var(--border)';b.style.color='var(--text-muted)'
 }
 
 function showOutput(result){
@@ -230,12 +275,12 @@ document.addEventListener("DOMContentLoaded",function(){
   const form=document.getElementById("listingForm");const outputBody=document.getElementById("outputBody");
   const generateBtn=document.getElementById("generateBtn");const usageBadge=document.getElementById("usageBadge");
   const copyAllBtn=document.getElementById("copyAllBtn");const exportBtn=document.getElementById("exportBtn");
-  const buyBtn=document.getElementById("buyBtn");const paymentModal=document.getElementById("paymentModal");
+  const paymentModal=document.getElementById("paymentModal");
   const modalClose=document.getElementById("modalClose");
 
   form.addEventListener("submit",function(e){
     e.preventDefault();
-    if(!isUnlocked()&&getUsageCount()>=1){paymentModal.classList.add("active");return}
+    if(!isUnlocked()){paymentModal.classList.add("active");return}
     const pn=document.getElementById("productName").value.trim();const kw=document.getElementById("keywords").value.trim();
     if(!pn){showToast("\u8bf7\u586b\u5199\u4ea7\u54c1\u540d\u79f0","error");return}
     if(!kw){showToast("\u8bf7\u586b\u5199\u6838\u5fc3\u5173\u952e\u8bcd","error");return}
@@ -248,7 +293,7 @@ document.addEventListener("DOMContentLoaded",function(){
           keywords:kw,features:document.getElementById("features").value||"Premium Quality,Easy to Use,Durable Design",
           storeDomain:document.getElementById("storeDomain").value.trim()
         });
-        showOutput(result);if(!isUnlocked())incrementUsage();updateUsageUI();showToast("\u2705 Listing\u751f\u6210\u6210\u529f\uff01","success")
+        showOutput(result);updateUsageUI();showToast("\u2705 Listing\u751f\u6210\u6210\u529f\uff01","success")
       }catch(err){showToast("\u751f\u6210\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5","error")}
       generateBtn.disabled=false;generateBtn.innerHTML='\u2728 AI\u751f\u6210Listing'
     },800)
@@ -286,7 +331,6 @@ document.addEventListener("DOMContentLoaded",function(){
     showToast("\u2705 \u6587\u4ef6\u5df2\u4e0b\u8f7d","success")
   });
 
-  buyBtn.addEventListener("click",function(){paymentModal.classList.add("active")});
   modalClose.addEventListener("click",function(){paymentModal.classList.remove("active")});
   paymentModal.addEventListener("click",function(e){if(e.target===paymentModal)paymentModal.classList.remove("active")});
   
@@ -367,19 +411,13 @@ document.addEventListener("DOMContentLoaded",function(){
   initUI()
 });
 
-window.WALLET_ADDRESS=WALLET_ADDRESS;window.generateListing=generateListing;window.isUnlocked=isUnlocked;window.unlockAccess=unlockAccess;
+window.generateListing=generateListing;window.isUnlocked=isUnlocked;window.showPayment=showPayment;window.manualUnlock=manualUnlock;
 
 // ====== UNLOCK BY URL PARAMETER ======
 (function(){
   const urlParams=new URLSearchParams(window.location.search);
-  const unlockCode=urlParams.get("unlock");
-  if(unlockCode==="crosslist2026"){
-    unlockAccess();
-    // Remove the param from URL without reloading
-    const url=new URL(window.location.href);
-    url.searchParams.delete("unlock");
-    window.history.replaceState({},"",url.toString());
-    showToast("\uD83C\uDF89 \u606d\u559c\uff01\u5df2\u89e3\u9501\u65e0\u9650\u4f7f\u7528\u6743\u9650\uff01","success");
-    updateUsageUI()
-  }
+  const code=urlParams.get("unlock")||urlParams.get("vip");
+  if(code==="month2026"){setExpiry(30);showToast("\uD83C\uDF89 \u606d\u559c\uff01\u5df2\u5f00\u901a\u6708\u5361\uff01","success");updateUsageUI()}
+  else if(code==="year2026"){setExpiry(365);showToast("\uD83C\uDF89 \u606d\u559c\uff01\u5df2\u5f00\u901a\u5e74\u5361\uff01","success");updateUsageUI()}
+  if(code){const url=new URL(window.location.href);url.searchParams.delete("unlock");url.searchParams.delete("vip");window.history.replaceState({},"",url.toString())}
 })();
