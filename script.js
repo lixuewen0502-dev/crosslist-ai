@@ -328,18 +328,30 @@ document.addEventListener("DOMContentLoaded",function(){
   }
   
   function checkPaymentText(text,imgData){
-    // Check for amount indicators
-    const has299=/29\.9|29\.90|29\.00|29元/.test(text);
-    const hasPayment=/支付|付款|交易|转账|微信|WECHAT|PAY/i.test(text);
-    const hasMoney=/[¥￥]/.test(text)||/\d+\.\d{2}/.test(text);
+    // Very lenient check - any Chinese text = likely a payment screenshot
+    const hasChinese=/[\u4e00-\u9fff]/.test(text);
+    const hasNumbers=/\d+/.test(text);
     
-    if(has299||(hasPayment&&hasMoney)){
-      unlockAccess();
-      uploadStatus.innerHTML='<div style="text-align:center;color:var(--success);font-size:16px;font-weight:600">✅ 验证通过！已自动开通无限权限 🎉<br><small style="color:var(--text-muted)">返回生成器即可无限使用</small></div>';
-      setTimeout(function(){paymentModal.classList.remove("active");updateUsageUI()},2000)
+    if(hasChinese||hasNumbers||hasPaymentRelated(text)){
+      autoUnlock()
     }else{
-      uploadStatus.innerHTML='<div style="text-align:center"><p style="color:#ff6b6b">❌ 未能识别到付款金额</p><p style="font-size:13px;color:var(--text-muted);margin-top:4px">请确认上传的是微信支付¥29.9的截图</p><button class="btn-sm" onclick="document.getElementById(\'screenshotInput\').click()" style="margin-top:8px">重新上传</button><button class="btn-sm" onclick="manualUnlock()" style="margin-top:8px;margin-left:4px">我已付款，手动开通</button></div>'
+      showRetry(text,imgData)
     }
+  }
+  
+  function hasPaymentRelated(text){
+    const keywords=/支付|微信|交易|金额|成功|完成|¥|￥|29|付款|转账|wechat|pay/i;
+    return keywords.test(text)
+  }
+  
+  function autoUnlock(){
+    unlockAccess();
+    uploadStatus.innerHTML='<div style="text-align:center;color:var(--success);font-size:16px;font-weight:600">✅ 验证通过！已自动开通无限权限 🎉<br><small style="color:var(--text-muted)">返回生成器即可无限使用</small></div>';
+    setTimeout(function(){paymentModal.classList.remove("active");updateUsageUI()},2000)
+  }
+  
+  function showRetry(text,imgData){
+    uploadStatus.innerHTML='<div style="text-align:center"><p style="color:#ff6b6b">❌ 未能识别到付款信息</p><p style="font-size:13px;color:var(--text-muted);margin-top:4px">点击下方按钮确认支付后，自动开通</p><button class="btn btn-primary btn-sm" onclick="manualUnlock()" style="margin-top:8px">✅ 我已支付 ¥29.9，立即开通</button></div>'
   }
   
   function fallbackVerify(imgData){
