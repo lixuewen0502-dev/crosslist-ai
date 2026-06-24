@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://lixuewen0502-dev.github.io/crosslist-ai/sitemap.xml
