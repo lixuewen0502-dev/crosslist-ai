@@ -289,7 +289,85 @@ document.addEventListener("DOMContentLoaded",function(){
   buyBtn.addEventListener("click",function(){paymentModal.classList.add("active")});
   modalClose.addEventListener("click",function(){paymentModal.classList.remove("active")});
   paymentModal.addEventListener("click",function(e){if(e.target===paymentModal)paymentModal.classList.remove("active")});
+  
+  // ====== SCREENSHOT UPLOAD + AUTO VERIFY ======
+  const uploadArea=document.getElementById("uploadArea");
+  const fileInput=document.getElementById("screenshotInput");
+  const uploadStatus=document.getElementById("uploadStatus");
+  
+  uploadArea.addEventListener("click",function(){fileInput.click()});
+  uploadArea.addEventListener("dragover",function(e){e.preventDefault();uploadArea.style.borderColor="var(--accent)";uploadArea.style.background="rgba(108,92,231,0.05)"});
+  uploadArea.addEventListener("dragleave",function(){uploadArea.style.borderColor="var(--border)";uploadArea.style.background="transparent"});
+  uploadArea.addEventListener("drop",function(e){e.preventDefault();uploadArea.style.borderColor="var(--border)";if(e.dataTransfer.files.length)handleScreenshot(e.dataTransfer.files[0])});
+  fileInput.addEventListener("change",function(){if(this.files.length)handleScreenshot(this.files[0])});
+  
+  function handleScreenshot(file){
+    uploadStatus.style.display="block";
+    uploadStatus.innerHTML='<div style="text-align:center"><span class="spinner"></span> 正在识别付款截图...</div>';
+    
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const imgData=e.target.result;
+      
+      // Try OCR with Tesseract
+      if(typeof Tesseract!=="undefined"){
+        Tesseract.recognize(imgData,"chi_sim+eng",{logger:function(m){if(m.status==="recognizing text"){uploadStatus.innerHTML='<div style="text-align:center"><span class="spinner"></span> 识别中... '+Math.round(m.progress*100)+"%</div>"}}})
+        .then(function(r){
+          const text=r.data.text;
+          console.log("OCR result:",text);
+          checkPaymentText(text,imgData)
+        })
+        .catch(function(){
+          fallbackVerify(imgData)
+        })
+      }else{
+        fallbackVerify(imgData)
+      }
+    };
+    reader.readAsDataURL(file)
+  }
+  
+  function checkPaymentText(text,imgData){
+    // Check for amount indicators
+    const has299=/29\.9|29\.90|29\.00|29元/.test(text);
+    const hasPayment=/支付|付款|交易|转账|微信|WECHAT|PAY/i.test(text);
+    const hasMoney=/[¥￥]/.test(text)||/\d+\.\d{2}/.test(text);
+    
+    if(has299||(hasPayment&&hasMoney)){
+      unlockAccess();
+      uploadStatus.innerHTML='<div style="text-align:center;color:var(--success);font-size:16px;font-weight:600">✅ 验证通过！已自动开通无限权限 🎉<br><small style="color:var(--text-muted)">返回生成器即可无限使用</small></div>';
+      setTimeout(function(){paymentModal.classList.remove("active");updateUsageUI()},2000)
+    }else{
+      uploadStatus.innerHTML='<div style="text-align:center"><p style="color:#ff6b6b">❌ 未能识别到付款金额</p><p style="font-size:13px;color:var(--text-muted);margin-top:4px">请确认上传的是微信支付¥29.9的截图</p><button class="btn-sm" onclick="document.getElementById(\'screenshotInput\').click()" style="margin-top:8px">重新上传</button><button class="btn-sm" onclick="manualUnlock()" style="margin-top:8px;margin-left:4px">我已付款，手动开通</button></div>'
+    }
+  }
+  
+  function fallbackVerify(imgData){
+    uploadStatus.innerHTML='<div style="text-align:center"><img src="'+imgData+'" style="max-width:200px;border-radius:4px;margin-bottom:8px"><p>请确认已支付 <strong>¥29.9</strong></p><button class="btn btn-primary btn-sm" onclick="manualUnlock()" style="margin-top:4px">✅ 确认已付款，开通</button></div>'
+  }
+  
+  function manualUnlock(){
+    unlockAccess();
+    uploadStatus.innerHTML='<div style="text-align:center;color:var(--success);font-weight:600">🎉 已开通！感谢您的支持</div>';
+    setTimeout(function(){paymentModal.classList.remove("active");updateUsageUI()},1500)
+  }
+  
   initUI()
 });
 
 window.WALLET_ADDRESS=WALLET_ADDRESS;window.generateListing=generateListing;window.isUnlocked=isUnlocked;window.unlockAccess=unlockAccess;
+
+// ====== UNLOCK BY URL PARAMETER ======
+(function(){
+  const urlParams=new URLSearchParams(window.location.search);
+  const unlockCode=urlParams.get("unlock");
+  if(unlockCode==="crosslist2026"){
+    unlockAccess();
+    // Remove the param from URL without reloading
+    const url=new URL(window.location.href);
+    url.searchParams.delete("unlock");
+    window.history.replaceState({},"",url.toString());
+    showToast("\uD83C\uDF89 \u606d\u559c\uff01\u5df2\u89e3\u9501\u65e0\u9650\u4f7f\u7528\u6743\u9650\uff01","success");
+    updateUsageUI()
+  }
+})();

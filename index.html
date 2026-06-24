@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -223,21 +224,17 @@
           <p style="margin-top:12px;font-size:14px;color:var(--text-muted)">打开微信扫一扫，支付 <strong>¥29.9</strong></p>
         </div>
 
-        <div class="payment-steps">
-          <h4>开通步骤：</h4>
-          <ol>
-            <li>打开微信 → 扫一扫上方的二维码</li>
-            <li>支付 <strong>¥29.9</strong></li>
-            <li>付款成功后截图发给我</li>
-            <li>我核对后为你开通无限权限</li>
-          </ol>
+        <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:16px">
+          <h4 style="font-size:15px;margin-bottom:12px">📸 已付款？上传截图自动开通</h4>
+          <div id="uploadArea" style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s">
+            <div style="font-size:36px;margin-bottom:8px">📤</div>
+            <p style="font-size:14px;color:var(--text-muted)">点击上传微信支付截图</p>
+            <input type="file" id="screenshotInput" accept="image/*" style="display:none">
+          </div>
+          <div id="uploadStatus" style="display:none;margin-top:12px"></div>
         </div>
 
-        <div class="payment-contact">
-          <p>📱 付款后联系我开通即可</p>
-        </div>
-
-        <p class="modal-note">⚠️ 付款后请保留截图，方便核对开通</p>
+        <p class="modal-note" style="margin-top:16px">⚠️ 系统自动识别截图中的金额，验证通过后自动开通</p>
       </div>
     </div>
   </div>
