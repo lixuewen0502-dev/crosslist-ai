@@ -94,10 +94,11 @@ function generateBullets(name,category,market,keywords,features){
   return bullets.slice(0,5)
 }
 
-function generateDescription(name,category,market,keywords,features,bullets){
+function generateDescription(name,category,market,keywords,features,bullets,storeDomain){
   const d=getCategoryData(category,market);const k=keywords.split(",").map(x=>x.trim()).filter(Boolean);
   const f=features.split("\n").map(x=>x.trim()).filter(Boolean);
-  return "Introducing the "+name+" - your ultimate solution for "+d.useCase+"!\\n\\nDesigned with "+pick(d.adjectives)+" technology and premium materials, the "+name+" delivers exceptional performance that transforms your "+d.useCase+" experience.\\n\\nWhy Choose "+name+"?\\n"+bullets.slice(0,3).map(b=>"\u2022 "+(b.split(":")[0]||b.substring(0,40)+"...")).join("\\n")+"\\n\\nWhether you\'re a professional or a beginner, the "+name+" is designed to meet all your needs. Its "+pick(d.adjectives)+" construction ensures long-lasting durability, while the "+pick(["intuitive","user-friendly","streamlined","efficient","innovative"])+" design makes it accessible to everyone.\\n\\nWhat\'s in the Box:\\n\u2022 1x "+name+"\\n\u2022 1x User Manual\\n\u2022 1x Premium Packaging\\n"+(f.length>2?"\u2022 "+f[0]+" Accessory Kit":"\u2022 Satisfaction Guarantee Card")+"\\n\\nClick \'Add to Cart\' now and experience the "+name+" difference!"
+  const domainLine=storeDomain?"\n\n\ud83c\udf10 Visit our store: "+storeDomain+" for more amazing products!":"";
+  return "Introducing the "+name+" - your ultimate solution for "+d.useCase+"!\\n\\nDesigned with "+pick(d.adjectives)+" technology and premium materials, the "+name+" delivers exceptional performance that transforms your "+d.useCase+" experience.\\n\\nWhy Choose "+name+"?\\n"+bullets.slice(0,3).map(b=>"\u2022 "+(b.split(":")[0]||b.substring(0,40)+"...")).join("\\n")+"\\n\\nWhether you\'re a professional or a beginner, the "+name+" is designed to meet all your needs. Its "+pick(d.adjectives)+" construction ensures long-lasting durability, while the "+pick(["intuitive","user-friendly","streamlined","efficient","innovative"])+" design makes it accessible to everyone.\\n\\nWhat\'s in the Box:\\n\u2022 1x "+name+"\\n\u2022 1x User Manual\\n\u2022 1x Premium Packaging\\n"+(f.length>2?"\u2022 "+f[0]+" Accessory Kit":"\u2022 Satisfaction Guarantee Card")+domainLine+"\\n\\nClick \'Add to Cart\' now and experience the "+name+" difference!"
 }
 
 function generateKeywords(name,category,market,keywords){
@@ -113,10 +114,10 @@ function generateKeywords(name,category,market,keywords){
 }
 
 function generateListing(data){
-  const{productName,category,market,keywords,features}=data;
+  const{productName,category,market,keywords,features,storeDomain}=data;
   const t=generateTitle(productName,category,market,keywords,features);
   const b=generateBullets(productName,category,market,keywords,features);
-  const d=generateDescription(productName,category,market,keywords,features,b);
+  const d=generateDescription(productName,category,market,keywords,features,b,storeDomain);
   const k=generateKeywords(productName,category,market,keywords);
   return{title:t,bullets:b,description:d,backendKeywords:k}
 }
@@ -162,7 +163,8 @@ function initUI(){
   const result=generateListing({
     productName:"Wireless Bluetooth Earbuds",category:"electronics",market:"US",
     keywords:"wireless earbuds, noise cancelling, Bluetooth 5.3, water resistant, long battery",
-    features:"HD Sound Quality\\n30hr Playtime\\nIPX7 Waterproof\\nComfort Fit\\nTouch Control"
+    features:"HD Sound Quality\\n30hr Playtime\\nIPX7 Waterproof\\nComfort Fit\\nTouch Control",
+    storeDomain:""
   });
   const ob=document.getElementById("outputBody");
   if(ob&&!ob.querySelector(".output-result")){showOutput(result);document.getElementById("copyAllBtn").disabled=true;document.getElementById("exportBtn").disabled=true}
@@ -190,7 +192,8 @@ document.addEventListener("DOMContentLoaded",function(){
         const result=generateListing({
           productName:pn,category:document.getElementById("category").value,
           market:document.getElementById("market").value,
-          keywords:kw,features:document.getElementById("features").value||"Premium Quality,Easy to Use,Durable Design"
+          keywords:kw,features:document.getElementById("features").value||"Premium Quality,Easy to Use,Durable Design",
+          storeDomain:document.getElementById("storeDomain").value.trim()
         });
         showOutput(result);if(!isUnlocked())incrementUsage();updateUsageUI();showToast("\u2705 Listing\u751f\u6210\u6210\u529f\uff01","success")
       }catch(err){showToast("\u751f\u6210\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5","error")}
